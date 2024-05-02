@@ -21,7 +21,8 @@ public class SimpleSQL implements AutoCloseable{
 
     public QueryResult query(String query){
         validarConsulta(query);
-        try(PreparedStatement stmt = this.conexion.prepareStatement(query)){
+        try{
+        PreparedStatement stmt = this.conexion.prepareStatement(query);
             return new QueryResult(stmt.executeQuery());
         } catch (SQLException e){
             throw new RuntimeException("Error al hacer la consulta: " ,e);
@@ -42,6 +43,7 @@ public class SimpleSQL implements AutoCloseable{
         validarConsulta(query);
         try(PreparedStatement statement = this.conexion.prepareStatement(query,Statement.RETURN_GENERATED_KEYS)){
             setParameters(statement,params);
+            statement.executeUpdate();
             ResultSet generatedKeys = statement.getGeneratedKeys();
             if (generatedKeys.next()){
                 return generatedKeys.getInt(1);
@@ -49,7 +51,7 @@ public class SimpleSQL implements AutoCloseable{
         } catch (SQLException e){
             throw new RuntimeException("Ha habido un error al hacer el INSERT: " ,e );
         }
-        return 0;
+        return -1;
     }
 
     public void iniciarTransaccion(){

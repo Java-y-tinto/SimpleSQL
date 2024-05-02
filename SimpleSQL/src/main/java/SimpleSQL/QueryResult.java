@@ -1,10 +1,10 @@
 package SimpleSQL;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 public class QueryResult {
     private final Multimap<String, Object> resultMap;
@@ -38,12 +38,6 @@ public class QueryResult {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Error al mapear los resultados del ResultSet", e);
-        } finally {
-            try {
-                resultSet.close();
-            } catch (SQLException e) {
-                // Ignoramos cualquier error al cerrar el ResultSet en este contexto
-            }
         }
         return result;
     }
