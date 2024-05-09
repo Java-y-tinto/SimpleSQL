@@ -49,7 +49,7 @@ public class SimpleSQL implements AutoCloseable{
      * Ejecuta una consulta SELECT en la base de datos con parámetros.
      *
      * @param query  La consulta SQL (String).
-     * @param params Los parámetros de la consulta (Object[]).
+     * @param params Los parámetros de la consulta (Object...).
      * @return Un objeto QueryResult que contiene los resultados de la consulta.
      */
     public QueryResult query(String query,Object... params){
@@ -67,7 +67,7 @@ public class SimpleSQL implements AutoCloseable{
      * Ejecuta una sentencia UPDATE en la base de datos.
      *
      * @param query  La sentencia SQL (String).
-     * @param params Los parámetros de la sentencia (Object[]).
+     * @param params Los parámetros de la sentencia (Object...).
      * @return El número de filas afectadas por la operación UPDATE (int), o -1 si no se actualizaron filas.
      */
     public int update(String query,Object... params){
@@ -87,7 +87,7 @@ public class SimpleSQL implements AutoCloseable{
      * Ejecuta una sentencia INSERT en la base de datos.
      *
      * @param query  La sentencia SQL (String).
-     * @param params Los parámetros de la sentencia (Object[]).
+     * @param params Los parámetros de la sentencia (Object...).
      * @return El valor de la clave primaria generada (int), o -1 si no se insertaron filas.
      */
     public int insert(String query,Object... params){
