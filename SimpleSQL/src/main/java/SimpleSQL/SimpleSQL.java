@@ -1,11 +1,20 @@
 package SimpleSQL;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class SimpleSQL implements AutoCloseable{
     private Connection conexion;
+    private ArrayList<Object> conexiones = new ArrayList<>();
+    public ResultSet resultSet;
+
+    public ResultSet getResultSet() {
+        return resultSet;
+    }
+
     /**
      * Construye una nueva instancia de SimpleSQL y establece la conexión a la base de datos.
      *
@@ -60,7 +69,11 @@ public class SimpleSQL implements AutoCloseable{
         try{
             PreparedStatement stmt = this.conexion.prepareStatement(query);
             setParameters(stmt,params);
-            return new QueryResult(stmt.executeQuery());
+            QueryResult result = new QueryResult(stmt.executeQuery());
+            conexiones.add(stmt);
+            conexiones.add(result.getResultados());
+
+            return result;
         } catch (SQLException e){
             throw new RuntimeException("Error al hacer la query: ",e);
         }
@@ -68,8 +81,9 @@ public class SimpleSQL implements AutoCloseable{
     public <T> Object query(String query, Class<T> clazz, Object... params){
         validarConsulta(query);
         try{
-            PreparedStatement stmt = this.conexion.prepareStatement(query);
+            PreparedStatement stmt = this.conexion.prepareStatement(query, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             ResultSet rs = stmt.executeQuery();
+            this.resultSet = rs;
             return mapResultsToObjects(rs,clazz);
         } catch (SQLException e){
             throw new RuntimeException("Error al hacer la consulta: ",e);
@@ -98,7 +112,9 @@ public class SimpleSQL implements AutoCloseable{
 
     private <T> T createObject(ResultSet resultSet,Class<T> clazz,int columnCount) throws SQLException{
         try {
-            T objeto = (T) clazz.getConstructor().newInstance();
+            Constructor<T> constructor = clazz.getConstructor();
+            constructor.setAccessible(true);
+            T objeto = constructor.newInstance();
             for (int i = 1;i<=columnCount;i++){
                 String columna = resultSet.getMetaData().getColumnName(i);
                 Object valor = resultSet.getObject(i);
@@ -114,13 +130,13 @@ public class SimpleSQL implements AutoCloseable{
         }
     }
 
-    private Field findField(Class<?> clazz, String columna){
-        try{
-            return clazz.getDeclaredField(columna.toLowerCase());
+    private Field findField(Class<?> clazz, String columnName) {
+        try {
+            return clazz.getDeclaredField(columnName);
         } catch (NoSuchFieldException e) {
-            Class<?> superClase = clazz.getSuperclass();
-            if (superClase != null){
-                return findField(superClase,columna);
+            Class<?> superClass = clazz.getSuperclass();
+            if (superClass != null) {
+                return findField(superClass, columnName);
             }
             return null;
         }
