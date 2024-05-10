@@ -3,12 +3,10 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class SimpleSQL implements AutoCloseable{
     private Connection conexion;
-    private ArrayList<Object> conexiones = new ArrayList<>();
     public ResultSet resultSet;
 
     public ResultSet getResultSet() {
@@ -69,11 +67,7 @@ public class SimpleSQL implements AutoCloseable{
         try{
             PreparedStatement stmt = this.conexion.prepareStatement(query);
             setParameters(stmt,params);
-            QueryResult result = new QueryResult(stmt.executeQuery());
-            conexiones.add(stmt);
-            conexiones.add(result.getResultados());
-
-            return result;
+            return new QueryResult(stmt.executeQuery());
         } catch (SQLException e){
             throw new RuntimeException("Error al hacer la query: ",e);
         }
