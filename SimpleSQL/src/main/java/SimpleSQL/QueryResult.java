@@ -16,7 +16,8 @@ public class QueryResult {
         this.resultados = resultSet;
     }
 
-    public ResultSet getResultados() {
+    public ResultSet getResultados() throws SQLException {
+       this.resultados.beforeFirst();
         return resultados;
     }
 

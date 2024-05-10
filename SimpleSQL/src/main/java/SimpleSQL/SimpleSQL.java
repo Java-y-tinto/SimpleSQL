@@ -48,7 +48,7 @@ public class SimpleSQL implements AutoCloseable{
     public QueryResult query(String query){
         validarConsulta(query);
         try{
-        PreparedStatement stmt = this.conexion.prepareStatement(query);
+        PreparedStatement stmt = this.conexion.prepareStatement(query, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             return new QueryResult(stmt.executeQuery());
         } catch (SQLException e){
             throw new RuntimeException("Error al hacer la consulta: " ,e);
@@ -65,7 +65,7 @@ public class SimpleSQL implements AutoCloseable{
     public QueryResult query(String query,Object... params){
         validarConsulta(query);
         try{
-            PreparedStatement stmt = this.conexion.prepareStatement(query);
+            PreparedStatement stmt = this.conexion.prepareStatement(query,ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_UPDATABLE);
             setParameters(stmt,params);
             return new QueryResult(stmt.executeQuery());
         } catch (SQLException e){
