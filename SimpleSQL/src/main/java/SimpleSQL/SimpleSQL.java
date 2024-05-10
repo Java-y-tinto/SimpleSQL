@@ -1,5 +1,8 @@
 package SimpleSQL;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.*;
+import java.util.HashMap;
 
 public class SimpleSQL implements AutoCloseable{
     private Connection conexion;
@@ -62,6 +65,67 @@ public class SimpleSQL implements AutoCloseable{
             throw new RuntimeException("Error al hacer la query: ",e);
         }
     }
+    public <T> Object query(String query, Class<T> clazz, Object... params){
+        validarConsulta(query);
+        try{
+            PreparedStatement stmt = this.conexion.prepareStatement(query);
+            ResultSet rs = stmt.executeQuery();
+            return mapResultsToObjects(rs,clazz);
+        } catch (SQLException e){
+            throw new RuntimeException("Error al hacer la consulta: ",e);
+        }
+    }
+
+    private <T> Object mapResultsToObjects(ResultSet resultSet,Class<T> clazz) throws SQLException{
+        ResultSetMetaData metaData = resultSet.getMetaData();
+        int columnas = metaData.getColumnCount();
+        if (resultSet.next()){
+            T obj = createObject(resultSet,clazz,columnas);
+            if (!resultSet.next()){
+                return obj;
+            }
+        }
+
+        HashMap<Object,T> resultMap = new HashMap<>();
+        resultSet.beforeFirst();
+        while (resultSet.next()){
+            T objeto = createObject(resultSet,clazz,columnas);
+            Object clave = resultSet.getObject(1);
+            resultMap.put(clave,objeto);
+        }
+        return resultMap;
+    }
+
+    private <T> T createObject(ResultSet resultSet,Class<T> clazz,int columnCount) throws SQLException{
+        try {
+            T objeto = (T) clazz.getConstructor().newInstance();
+            for (int i = 1;i<=columnCount;i++){
+                String columna = resultSet.getMetaData().getColumnName(i);
+                Object valor = resultSet.getObject(i);
+                Field campo = findField(clazz,columna);
+                if (campo != null){
+                    campo.setAccessible(true);
+                    campo.set(objeto,valor);
+                }
+            }
+            return objeto;
+        } catch (Exception e){
+            throw new RuntimeException("Error al crear los objetos resultado",e);
+        }
+    }
+
+    private Field findField(Class<?> clazz, String columna){
+        try{
+            return clazz.getDeclaredField(columna.toLowerCase());
+        } catch (NoSuchFieldException e) {
+            Class<?> superClase = clazz.getSuperclass();
+            if (superClase != null){
+                return findField(superClase,columna);
+            }
+            return null;
+        }
+    }
+
 
     /**
      * Ejecuta una sentencia UPDATE en la base de datos.
