@@ -32,6 +32,7 @@ public class SimpleSQL implements AutoCloseable{
     public void close(){
         try {
             if (this.conexion!=null){
+                this.resultSet.close();
                 this.conexion.close();
             }
         } catch (SQLException e){
@@ -60,7 +61,7 @@ public class SimpleSQL implements AutoCloseable{
      *
      * @param query  La consulta SQL (String).
      * @param params Los parámetros de la consulta (Object...).
-     * @return Un objeto QueryResult que contiene los resultados de la consulta.
+     * @return Un objeto QueryResult que contiene los resultados de la consulta en forma de ResultSet actualizable(El usuario debe cerrarlo manualmente) y de Multimap.
      */
     public QueryResult query(String query,Object... params){
         validarConsulta(query);
@@ -72,6 +73,14 @@ public class SimpleSQL implements AutoCloseable{
             throw new RuntimeException("Error al hacer la query: ",e);
         }
     }
+
+    /**
+     * Ejecuta una consulta Select en la base de datos con parámetros y la mapea a objetos
+     * @param query La consulta SQL [String]
+     * @param clazz El objeto de la clase a mapear (Dejar constructor vacío)
+     * @param params Parámetros de la consulta Object[]
+     * @return El objeto cuyos atributos son los resultados de la consulta si solo hay un resultado,o un Hashmap,cuya clave es la primera columna de la consulta,y cuyo valor es el objeto
+     */
     public <T> Object query(String query, Class<T> clazz, Object... params){
         validarConsulta(query);
         try{
