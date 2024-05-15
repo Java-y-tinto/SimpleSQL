@@ -86,7 +86,7 @@ try(SimpleSQL sql = new SimpleSQL(url,user,password)){
 }
 ```
 
-##Dependencias
+## Dependencias
 
 Java 8 o superior
 Controlador JDBC compatible con tu base de datos (por ejemplo, MySQL Connector/J para MySQL)
